@@ -63,6 +63,7 @@ Right to left: [@example](https://github.com/Jonrodtang)    [@example](https://g
 
 ### Team members:
 - [Marijan Soric](https://github.com/soricm)
+- [Diogo Parcerias](https://github.com/pvdec)
 
 ## License
 ------
