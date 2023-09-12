@@ -62,7 +62,7 @@ Right to left: [@example](https://github.com/Jonrodtang)    [@example](https://g
 - [Ulrik Røsby](https://github.com/ulrik2204)
 
 ### Team members:
-- [Someone](githublink)
+- [Marijan Sorić](https://github.com/soricm)
 
 ## License
 ------
