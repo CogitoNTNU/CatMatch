@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "catmatch"
+version = "0.1.0"
+description = "The CatMatch Project Cogito NTNU Autumn 2023"
+authors = ["Ulrik Røsby <ulrik@rosby.no>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.5"
+mypy = "^1.5.1"
+pandas = "^2.1.0"
+numpy = "^1.25.2"
+matplotlib = "^3.7.3"
+black = "^23.9.1"
+flake8 = "^6.1.0"
+pydantic = "^2.3.0"
+fastapi = "^0.103.1"
+sqlalchemy = "^2.0.20"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
