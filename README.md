@@ -57,7 +57,7 @@ Data in the data folder taken from [Kaggle](https://www.kaggle.com/datasets/prav
 <img src="https://cogito-ntnu.no/static/img/projects/erpokerpfpwekwpkerwer.png"></img>
 </div>
 
-Right to left: [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
+Right to left: [@example](https://github.com/Jonrodtang)    [@soricm](https://github.com/soricm)    [@example](https://github.com/Jonrodtang)    [@example](https://github.com/Jonrodtang)  
 ### Leader(s):
 - [Ulrik Røsby](https://github.com/ulrik2204)
 
