@@ -66,6 +66,7 @@ Right to left: [@example](https://github.com/Jonrodtang)    [@example](https://g
 - [Diogo Parcerias](https://github.com/pvdec)
 - [Wilma Røise Huseby](https://github.com/Meeumi)
 - [Adi Singh](https://github.com/adisinghstudent)
+- [Erik Angus Usterud-Svendsen](https://github.com/erikangus)
 
 ## License
 ------
