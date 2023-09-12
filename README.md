@@ -64,6 +64,8 @@ Right to left: [@example](https://github.com/Jonrodtang)    [@example](https://g
 ### Team members:
 - [Marijan Soric](https://github.com/soricm)
 - [Wilma Røise Huseby](https://github.com/Meeumi)
+- [Adi Singh](https://github.com/adisinghstudent)
+
 ## License
 ------
 Distributed under the MIT License. See `LICENSE` for more information.
