@@ -7,25 +7,19 @@ import matplotlib.pyplot as plt
 
 
 ```python
-df = pd.read_csv("../data/lidar_data_with_audio_timestamps_oct_28.csv", index_col=0)
-```
-
-
-```python
-df = df[["height", "width", "datetime_enter", "datetime_leave"]]
-df
+df = pd.read_csv("../data/cats.csv", index_col=0)
 ```
 
 
 ```python
 # Read one column
-df["height"]
+df["age"]
 ```
 
 
 ```python
 # Read multiple columns
-df[["height", "width"]]
+df[["age", "gender"]]
 
 
 ```
@@ -39,7 +33,7 @@ df.loc[113]
 
 ```python
 # Read all rows that fulfill a condition
-df[df["height"] > 200]
+df[df["age"] > 4]
 #...
 ```
 
@@ -68,13 +62,13 @@ df.describe()
 
 
 ```python
-df["height"].value_counts()
+df["age"].value_counts()
 ```
 
 
 ```python
 # Plot some column
-df["height"].plot(kind="hist", bins=6)
+df["age"].plot(kind="hist", bins=6)
 ```
 
 
@@ -84,19 +78,20 @@ df.plot(kind="scatter", x="height", y="width", xlabel="Height", ylabel="Width")
 
 
 ```python
-# Create column
-df["area"] = df["height"] * df["width"]
+# Create column, this is a silly exampl
+df["age_size"] = df["age"] * df["size"]
 df
 ```
+
 
 
 ```python
 # Create a column by labels
 def create_label(row):
-    if row["height"] > 200:
-        return "big"
+    if row["age"] > 5:
+        return "old"
     else:
-        return "small"
+        return "young"
 
 df["label"] = df.apply(create_label, axis=1)
 df
