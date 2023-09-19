@@ -20,6 +20,9 @@ sqlalchemy = "^2.0.20"
 uvicorn = {extras = ["standard"], version = "^0.23.2"}
 
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.25.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
