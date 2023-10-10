@@ -33,6 +33,7 @@ poetry install
 
 The virtual environment (poetry shell) needs to be activated each time you work with the project.
 
+
 ### Plugins for development
 
 This project uses the following tools for development which might require extensions in your editor.
