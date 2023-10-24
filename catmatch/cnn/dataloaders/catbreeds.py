@@ -12,13 +12,19 @@ class CatbreedDataset(Dataset):
         self.img_dir = img_dir
         self.transform = transform
         self.target_transform = target_transform
-        self.dic = dict() # Kan slettes?
+        self.dic = dict()  # Kan slettes?
         self.paths = []
         self.labels = []
+        # Need to convert the labels to numbers
+        # Create a dictionary of label to number
+        dic = {}
         for folder in os.listdir(img_dir):
+            dic[folder] = len(dic)
             for file in os.listdir(img_dir + folder):
                 self.paths.append(Path(img_dir) / Path(folder) / Path(file))
                 self.labels.append(folder)
+
+        print("dic", dic)
 
     def __len__(self):
         return len(self.paths)
@@ -48,7 +54,7 @@ def create_catbreed_dataloader(img_dir, transform=None, target_transform=None):
 
 def main():
     torch.manual_seed(42)
-    train, val, test = create_catbreed_dataloader("./.data")
+    train, val, test = create_catbreed_dataloader("./.data/")
 
     # image size torch.Size([3, 500, 333])
     # British shorthair
