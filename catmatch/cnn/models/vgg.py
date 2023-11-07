@@ -1,4 +1,7 @@
 import torch.nn as nn
+from torch import softmax
+
+# taken from 
 
 
 class VGG16(nn.Module):

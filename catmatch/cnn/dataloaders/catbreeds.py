@@ -4,6 +4,7 @@ from venv import create
 
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split
+from torchvision.datasets import ImageFolder
 from torchvision.io.image import read_image  # type: ignore
 
 
@@ -42,13 +43,16 @@ class CatbreedDataset(Dataset):
         return image, label
 
 
-def create_catbreed_dataloader(img_dir, transform=None, target_transform=None):
+def create_catbreed_dataloader(
+    img_dir, batch_size: int = 32, transform=None, target_transform=None
+):
     # TODO: Equally split such that there are equal number of each breed in each set
-    dataset = CatbreedDataset(img_dir, transform, target_transform)
+    # dataset = CatbreedDataset(img_dir, transform, target_transform)
+    dataset = ImageFolder(img_dir, transform, target_transform)
     train, val, test = random_split(dataset, [0.8, 0.1, 0.1])
-    train_dl = DataLoader(train, batch_size=32, shuffle=True)
-    val_dl = DataLoader(val, batch_size=32, shuffle=True)
-    test_dl = DataLoader(test, batch_size=32, shuffle=True)
+    train_dl = DataLoader(train, batch_size=batch_size, shuffle=True)
+    val_dl = DataLoader(val, batch_size=batch_size, shuffle=True)
+    test_dl = DataLoader(test, batch_size=batch_size, shuffle=True)
     return train_dl, val_dl, test_dl
 
 

@@ -86,6 +86,7 @@ class NNManager:
         self.call_model = call_model
         self.try_gpu = try_gpu
         print(self.model)
+        print("New!!!")
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
         self.optimizer = torch.optim.Adam(self.model.parameters(), self.learning_rate)  # type: ignore # noqa
@@ -106,6 +107,7 @@ class NNManager:
             loss=collections.OrderedDict(), accuracy=collections.OrderedDict()
         )
         self.checkpoint_dir = pathlib.Path("checkpoints")
+        print("Torch.cuda.is_available():", torch.cuda.is_available())
 
     def validation_step(self):
         """
@@ -170,9 +172,8 @@ class NNManager:
             Y_batch = utils.to_cuda(Y_batch)
 
         # Perform the forward pass
-        out = self.call_model(self.model, X_batch)
+        out = self.call_model(self.model.cuda(), X_batch)
         predictions = self.modify_model_output(out)
-        # Compute the cross entropy loss for the batch
         loss = self.loss_criterion(predictions, Y_batch)
         # Backpropagation
         loss.backward()
@@ -191,10 +192,10 @@ class NNManager:
         def should_validate_model():
             return self.global_step % self.num_steps_per_val == 0
 
-        should_early_stop = False
         for epoch in range(self.epochs):
             print(f"---- Epoch {epoch + 1} of {self.epochs} ----")
             self.epoch = epoch
+            should_early_stop = False
             # Perform a full pass through all the training samples
             for X_batch, Y_batch in tqdm(self.dataloader_train):
                 loss = self.train_step(X_batch, Y_batch)
