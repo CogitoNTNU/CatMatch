@@ -197,9 +197,15 @@ class NNManager:
             self.epoch = epoch
             should_early_stop = False
             # Perform a full pass through all the training samples
-            for X_batch, Y_batch in tqdm(self.dataloader_train):
+            total_loss = 0
+            for index, (X_batch, Y_batch) in (
+                pbar := tqdm(
+                    enumerate(self.dataloader_train), total=len(self.dataloader_train)
+                )
+            ):
                 loss = self.train_step(X_batch, Y_batch)
                 self.train_history["loss"][self.global_step] = loss
+                total_loss += loss
                 self.global_step += 1
                 # Compute loss/accuracy for validation set
                 if should_validate_model():
@@ -209,6 +215,7 @@ class NNManager:
                         print("Early stopping.")
                         should_early_stop = True
                         break
+                pbar.set_postfix_str(f"average loss {total_loss/(index+1):.3f}")
             if should_early_stop:
                 break
         self._create_training_plots()

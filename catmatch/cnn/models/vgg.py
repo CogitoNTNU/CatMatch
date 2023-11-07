@@ -1,7 +1,6 @@
 import torch.nn as nn
-from torch import softmax
 
-# taken from 
+# taken from
 
 
 class VGG16(nn.Module):
@@ -101,4 +100,4 @@ class VGG16(nn.Module):
         out = self.fc(out)
         out = self.fc1(out)
         out = self.fc2(out)
-        return out
+        return softmax(out)
