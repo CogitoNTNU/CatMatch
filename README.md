@@ -33,6 +33,12 @@ poetry install
 
 The virtual environment (poetry shell) needs to be activated each time you work with the project.
 
+
+### Installing pytorch
+Pytorch needs to be installed manually, as the version depends on the the type of computer and if you have a graphics card with cuda. Go to [pytorch.org](https://pytorch.org/) and follow the instructions, install with pip inside the poetry environment.
+
+
+
 ### Plugins for development
 
 This project uses the following tools for development which might require extensions in your editor.
@@ -48,7 +54,10 @@ uvicorn catmatch.serve:app --reload # Runs the emojify/main.py file
 ```
 
 #### Data
-Data in the data folder taken from [Kaggle](https://www.kaggle.com/datasets/praveengovi/emotions-dataset-for-nlp)
+The data used for developing the movie recommender system is from [Kaggle](https://www.kaggle.com/datasets/gargmanas/movierecommenderdataset?select=ratings.csv). 
+
+The dataset used for creating cat image embeddings is from [Kaggle](https://www.kaggle.com/datasets/shawngano/gano-cat-breed-image-collection)
+
 
 ## Team
 ------
