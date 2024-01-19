@@ -1,6 +1,12 @@
 import torch
 from PIL import Image
 from torchvision import models, transforms
+import tqdm
+from pathlib import Path
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import h5py
+import math
 
 # Load the trained model (make sure to provide the path to your model's weights)
 embedding_model = models.efficientnet_b1(pretrained=False)
@@ -22,25 +28,20 @@ preprocess = transforms.Compose(
 )
 
 
-def get_image_embeddings(image):
+def prepare_model(file_weights_path="./best.ckpt"):
     # Load the pre-trained EfficientNet B1 model
     model = models.efficientnet_b1(pretrained=False)
-    model.load_state_dict(torch.load("./checkpoints/best.ckpt"))
+    model.load_state_dict(torch.load(file_weights_path))
     model.classifier = torch.nn.Sequential(torch.nn.Identity())
 
     # Set model to evaluation mode
     model.eval()
 
-    # Define the image transformations
-    preprocess = transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
+    return model
 
+
+def get_image_embeddings_single_image(image):
+    model = prepare_model()
     # Preprocess the image
     img_t = preprocess(image)
     batch_t = torch.unsqueeze(img_t, 0)
@@ -52,13 +53,59 @@ def get_image_embeddings(image):
     return embeddings
 
 
+def get_image_embeddings(image_folder, batch_size=128):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Running on {device}")
+    model = prepare_model()
+    model.to(device)
+
+    image_folder = Path(image_folder)
+    files = list(image_folder.rglob("**/*.*"))  # Get all files recursively, no folders
+
+    n_batches = math.ceil(len(files) / batch_size)
+    embeddings = []
+
+    with torch.no_grad():
+        for i in tqdm.tqdm(range(n_batches), desc="image batches"):
+            batch_paths = files[i * batch_size : (i + 1) * batch_size]
+            batch = []
+
+            for path in batch_paths:
+                try:
+                    image = Image.open(path).convert("RGB")
+                    batch.append(preprocess(image))
+                except:
+                    print(f"error in reading file {path.as_posix()}")
+
+            if len(batch) == 0:
+                continue
+            batch = torch.stack(batch).to(device)
+
+            batch_embeddings = model(batch).detach().cpu().numpy()
+            embeddings += [embedding for embedding in batch_embeddings]
+
+    return np.array(embeddings)
+
+
+def calculate_similarity_matrix(embeddings: np.array):
+    return cosine_similarity(embeddings, embeddings)
+
+
+def save_similarity_matrix(
+    similiarity_matrix: np.array, filename="similiarity_matrix.hdf5"
+):
+    f = h5py.File(filename, "w")
+
+    f.create_dataset("data", data=similiarity_matrix)
+
+
 def main():
-    image = Image.open("./.data/Abyssinian/Abyssinian-35021741_239.jpg").convert("RGB")
-    # show image
-    image.show()
-    embeddings = get_image_embeddings(image)
-    print("Shape: ", embeddings.shape)
-    print("Embeddings: ", embeddings)
+    embeddings = get_image_embeddings("E:\datasets\Gano-Cat-Breeds-V1_1")
+    similiarity_matrix = calculate_similarity_matrix(embeddings)
+    similiarity_matrix = similiarity_matrix.astype(
+        np.float16
+    )  # Reduce precision for lower file size
+    save_similarity_matrix(similiarity_matrix)
 
 
 if __name__ == "__main__":

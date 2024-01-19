@@ -162,3 +162,5 @@ checkpoints/
 .data/
 .DS_Store
 .recsys/
+
+*.ckpt
