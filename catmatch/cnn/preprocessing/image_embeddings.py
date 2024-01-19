@@ -3,8 +3,7 @@ from PIL import Image
 from torchvision import models, transforms
 
 # Load the trained model (make sure to provide the path to your model's weights)
-embedding_model = models.resnet50(pretrained=False)
-embedding_model.load_state_dict(torch.load("./checkpoints/best.ckpt"))
+embedding_model = models.efficientnet_b1(pretrained=False)
 embedding_model.eval()  # Set the model to evaluation mode
 
 # If you used the standard ResNet50, it includes a final fully connected layer for classification.
@@ -23,13 +22,34 @@ preprocess = transforms.Compose(
 )
 
 
-def get_image_embeddings(image: Image.Image):
-    preprocessed = preprocess(image)
-    preprocessed = preprocessed.unsqueeze(0)
+def get_image_embeddings(image):
+    # Load the pre-trained EfficientNet B1 model
+    model = models.efficientnet_b1(pretrained=False)
+    model.load_state_dict(torch.load("./checkpoints/best.ckpt"))
+    model.classifier = torch.nn.Sequential(torch.nn.Identity())
+
+    # Set model to evaluation mode
+    model.eval()
+
+    # Define the image transformations
+    preprocess = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
+
+    # Preprocess the image
+    img_t = preprocess(image)
+    batch_t = torch.unsqueeze(img_t, 0)
+
+    # Get the embeddings from the model
     with torch.no_grad():
-        embeddings = embedding_model(preprocessed)
-        embeddings = torch.flatten(embeddings, 1)
-        return embeddings
+        embeddings = model(batch_t)
+
+    return embeddings
 
 
 def main():
