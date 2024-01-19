@@ -67,7 +67,7 @@ def get_image_embeddings(image_folder, batch_size=128):
 
     with torch.no_grad():
         for i in tqdm.tqdm(range(n_batches), desc="image batches"):
-            batch_paths = files[i * batch_size: (i + 1) * batch_size]
+            batch_paths = files[i * batch_size : (i + 1) * batch_size]
             batch = []
 
             for path in batch_paths:
@@ -102,7 +102,9 @@ def save_similarity_matrix(
 def main():
     embeddings = get_image_embeddings("E:\datasets\Gano-Cat-Breeds-V1_1")
     similiarity_matrix = calculate_similarity_matrix(embeddings)
-    similiarity_matrix = similiarity_matrix.astype(np.float16) # Reduce precision for lower file size
+    similiarity_matrix = similiarity_matrix.astype(
+        np.float16
+    )  # Reduce precision for lower file size
     save_similarity_matrix(similiarity_matrix)
 
 
