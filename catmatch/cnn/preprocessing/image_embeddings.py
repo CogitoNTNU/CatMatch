@@ -1,12 +1,13 @@
-import torch
-from PIL import Image
-from torchvision import models, transforms
-import tqdm
-from pathlib import Path
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
-import h5py
 import math
+from pathlib import Path
+
+import h5py
+import numpy as np
+import torch
+import tqdm
+from PIL import Image
+from sklearn.metrics.pairwise import cosine_similarity
+from torchvision import models, transforms
 
 # Load the trained model (make sure to provide the path to your model's weights)
 embedding_model = models.efficientnet_b1(pretrained=False)
@@ -28,7 +29,7 @@ preprocess = transforms.Compose(
 )
 
 
-def prepare_model(file_weights_path="./best.ckpt"):
+def prepare_model(file_weights_path="./checkpoints/best.ckpt"):
     # Load the pre-trained EfficientNet B1 model
     model = models.efficientnet_b1(pretrained=False)
     model.load_state_dict(torch.load(file_weights_path))
@@ -74,7 +75,7 @@ def get_image_embeddings(image_folder, batch_size=128):
                 try:
                     image = Image.open(path).convert("RGB")
                     batch.append(preprocess(image))
-                except:
+                except Exception:
                     print(f"error in reading file {path.as_posix()}")
 
             if len(batch) == 0:
@@ -87,20 +88,20 @@ def get_image_embeddings(image_folder, batch_size=128):
     return np.array(embeddings)
 
 
-def calculate_similarity_matrix(embeddings: np.array):
+def calculate_similarity_matrix(embeddings: np.ndarray):
     return cosine_similarity(embeddings, embeddings)
 
 
 def save_similarity_matrix(
-    similiarity_matrix: np.array, filename="similiarity_matrix.hdf5"
+    similarity_matrix: np.ndarray, filename="similarity_matrix.hdf5"
 ):
     f = h5py.File(filename, "w")
 
-    f.create_dataset("data", data=similiarity_matrix)
+    f.create_dataset("data", data=similarity_matrix)
 
 
 def main():
-    embeddings = get_image_embeddings("E:\datasets\Gano-Cat-Breeds-V1_1")
+    embeddings = get_image_embeddings("./.data")
     similiarity_matrix = calculate_similarity_matrix(embeddings)
     similiarity_matrix = similiarity_matrix.astype(
         np.float16
