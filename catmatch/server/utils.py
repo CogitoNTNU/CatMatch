@@ -2,7 +2,7 @@ import json
 
 import numpy as np
 
-BASE_URL = "https://storage.googleapis.com/catmatch/"
+BUCKET_BASE_URL = "https://storage.googleapis.com/catmatch/"
 
 
 def load_image_paths() -> list[str]:
@@ -14,12 +14,12 @@ IMAGE_PATHS = load_image_paths()
 
 
 def get_image_url_from_index(index: int):
-    return BASE_URL + IMAGE_PATHS[index]
+    return BUCKET_BASE_URL + IMAGE_PATHS[index]
 
 
 def get_index_from_image_url(image_url: str) -> int | None:
     try:
-        return IMAGE_PATHS.index(image_url.replace(BASE_URL, ""))
+        return IMAGE_PATHS.index(image_url.replace(BUCKET_BASE_URL, ""))
     except ValueError:
         return None
 
