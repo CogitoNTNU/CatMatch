@@ -1,4 +1,4 @@
-import pickle
+import json
 
 import numpy as np
 
@@ -6,8 +6,8 @@ BASE_URL = "https://storage.googleapis.com/catmatch/"
 
 
 def load_image_paths() -> list[str]:
-    with open("./image_paths.pkl", "rb") as f:
-        return pickle.load(f)
+    with open("./image_paths.json", "r") as f:
+        return json.load(f)
 
 
 IMAGE_PATHS = load_image_paths()

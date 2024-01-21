@@ -4,7 +4,6 @@ import h5py
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
-from tqdm import trange
 
 
 def read_h5py_file(path: str) -> np.ndarray:
