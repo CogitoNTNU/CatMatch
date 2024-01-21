@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -44,3 +45,8 @@ async def recommendations(body: RecommendationsBody):
     )
     recommendation_urls = [get_image_url_from_index(index) for index in recommendations]
     return RecommendationsResponse(recommendations=recommendation_urls)
+
+
+@recsys_router.get("/hello")
+async def hello():
+    return "Hello!"
