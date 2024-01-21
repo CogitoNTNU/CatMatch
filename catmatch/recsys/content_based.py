@@ -16,68 +16,23 @@ class ContentBasedRecommender:
         self,
         similarity_matrix_path: str = "./similarity_matrix.hdf5",
     ):
-        # self.embedding = embedding
         self.similarity_matrix = read_h5py_file(similarity_matrix_path)
-        # self.user_ratings = pd.DataFrame()  # TODO: remove
-        # self.cats_seen = self.user_ratings.isna()
-
-    # def matrix_pairwise_cosine_similarity(self):
-    #     self.similarity_matrix = pd.DataFrame(
-    #         cosine_similarity(self.embedding), index=self.embedding.index
-    #     )
-    #     self.similarity_matrix = self.similarity_matrix.T.set_index(
-    #         self.embedding.index
-    #     ).T
-
-    # find the k most similar items to the item X
-    # def k_most_similar_item_user(self, movie, userId):
-    #     # softmax = lambda x: np.exp(x) / sum(np.exp(x))
-
-    #     movies_rated = self.user_ratings.dropna()
-    #     ind = movies_rated.index.tolist()
-    #     if movie in ind:
-    #         return movies_rated.loc[movie]
-    #     else:
-    #         ind.append(movie)
-    #     # matrix = self.matrix_pairwise_cosine_similarity()
-
-    #     matrix = pd.DataFrame()  # TODO: change
-    #     new_matrix = matrix.loc[ind].T.loc[ind]
-    #     k_best = new_matrix.loc[movie]
-    #     k_best = k_best[~k_best.index.duplicated(keep="first")]
-    #     # k_best = k_best[~k_best.columns.duplicated(keep='first')]
-    #     k_best = k_best.sort_values(ascending=False)
-    #     k_best.drop(movie, inplace=True)
-
-    #     mat = pd.concat([(k_best), movies_rated], axis=1)
-    #     mat.rename(columns={userId: "Scores"}, inplace=True)
-    #     # mat = mat[mat[movie]>0]
-    #     # mat[movie] = softmax(mat[movie])
-    #     predicted_rate = (mat.values[:, 0] @ mat.values[:, 1]) / (
-    #         mat.values[:, 0]
-    #     ).sum()
-    #     return predicted_rate
-
-    # def predict(self, user_ratings: np.ndarray, k: int = 10):
-    #     for userId in user_ratings.index[:k]:
-    #         for movie in user_ratings.columns[:k]:
-    #             try:
-    #                 prediction = self.k_most_similar_item_user(movie, userId)
-    #             except Exception:
-    #                 prediction = -1
-    #                 # print(prediction)
-    #             user_ratings.loc[userId, movie] = prediction
-    #             # print(prediction)
-    #     return user_ratings
-
-    def predict_ratings_for_user(self, user_ratings: np.ndarray, k: int = 20):
-        """Returns the predicted ratings for all cats for a given set of
-        user ratings by using the similarities between cat images."""
-        return np.array([random.choice([0, 1]) for _ in range(len(user_ratings))])
 
     def recommend_k_new_items(self, user_ratings: np.ndarray, k: int = 20):
-        predicted_ratings = self.predict_ratings_for_user(user_ratings, k)
-        return np.argsort(predicted_ratings)[::-1][:k]
+        # Find the K most similar cats to the user's cats
+        # There are two ways to do this:
+        # 1. Take the average of the embedding of all the cats the user has rated,
+        #   then compute the cosine similarity between this average embedding and all the other cats.
+        #   then take the K most similar cats (highest values).
+        # 2. Take the cosine similarity vector for each cat the user has rated,
+        #    then take the average of these vectors. Then choose the items
+        #    with the k highest values in this vector.
+        indices_of_rated_items = np.where(~np.isnan(user_ratings))[0]
+        # similarity_vectors = self.similarity_matrix[indices]
+        average_similarity_vectors = self.similarity_matrix[
+            indices_of_rated_items
+        ].mean(axis=0)
+        return np.argsort(average_similarity_vectors)[::-1][:k]
 
     # def recommend_k_movies(self, userId, k):
     #     return self.user_ratings.loc[userId].sort_values(ascending=False)[:k]

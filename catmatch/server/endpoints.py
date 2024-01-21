@@ -1,3 +1,4 @@
+import logging
 import random
 
 from fastapi import APIRouter, HTTPException
@@ -23,6 +24,7 @@ class RecommendationsResponse(BaseModel):
 
 
 recommender = ContentBasedRecommender(similarity_matrix_path="./similarity_matrix.hdf5")
+logger = logging.getLogger(__name__)
 
 
 @recsys_router.post("/recommendations")
@@ -36,6 +38,7 @@ async def recommendations(body: RecommendationsBody):
     if ratings_array is None:
         raise HTTPException(status_code=400, detail="Invalid image URL")
     # return random recommendations
+    logger.info("Calculating recommendations...")
     recommendations = recommender.recommend_k_new_items(
         ratings_array, body.number_of_recommendations
     )
