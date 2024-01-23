@@ -1,9 +1,5 @@
-import random
-
 import h5py
 import numpy as np
-import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
 
 
 def read_h5py_file(path: str) -> np.ndarray:
@@ -11,34 +7,50 @@ def read_h5py_file(path: str) -> np.ndarray:
     return f["data"][()]  # type: ignore
 
 
-class ContentBasedRecommender:
-    def __init__(
-        self,
-        similarity_matrix_path: str = "./similarity_matrix.hdf5",
-    ):
-        self.similarity_matrix = read_h5py_file(similarity_matrix_path)
+def recommend_k_new_items(
+    user_ratings: np.ndarray, similarity_matrix: np.ndarray, k: int = 20
+) -> np.ndarray:
+    """Recommend k new items to the user based on their rated items
+    and a similarity matrix between all items.
 
-    def recommend_k_new_items(self, user_ratings: np.ndarray, k: int = 20):
-        # Find the K most similar cats to the user's cats
-        # There are two ways to do this:
-        # 1. Take the average of the embedding of all the cats the user has rated,
-        #   then compute the cosine similarity between this average embedding and all the other cats.
-        #   then take the K most similar cats (highest values).
-        # 2. Take the cosine similarity vector for each cat the user has rated,
-        #    then take the average of these vectors. Then choose the items
-        #    with the k highest values in this vector.
-        indices_of_rated_items = np.where(~np.isnan(user_ratings))[0]
-        # similarity_vectors = self.similarity_matrix[indices]
-        average_similarity_vectors = self.similarity_matrix[
-            indices_of_rated_items
-        ].mean(axis=0)
-        return np.argsort(average_similarity_vectors)[::-1][:k]
+    Args:
+        user_ratings (np.ndarray): The array of ratings the user has given.
+            Is NaN for unrated items.
+        similarity_matrix (np.ndarray): The similarity matrix between all items.
+        k (int, optional): The number of recommendations for the. Defaults to 20.
+
+    Returns:
+        np.ndarray: The indices of items in from the similarity matrix
+            of the k best items to recommend.
+    """
+    # Find the K most similar cats to the user's cats
+    # 2. Take the cosine similarity vector for each cat the user has rated,
+    #    then take the average of these vectors. Then choose the items
+    #    with the k highest values in this vector.
+    # TODO: Ensure the user does not get cats they have already seen
+    indices_of_rated_items = np.where(~np.isnan(user_ratings))[0]
+    # similarity_vectors = self.similarity_matrix[indices]
+    average_similarity_vectors = similarity_matrix[indices_of_rated_items].mean(axis=0)
+    # Remove duplicates
+    average_similarity_vectors[indices_of_rated_items] = -np.inf
+    # return np.argsort(average_similarity_vectors)[::-1][:k]
+    # Take the top half of the array with the highest values
+    half = len(average_similarity_vectors) // 2
+    # Get half of the array with the highest values
+    top_half_indices = np.argpartition(average_similarity_vectors, -half)[-half:]
+    top_half_similarities = average_similarity_vectors[top_half_indices]
+    # Get a random sample of the top half weighted by their similarity
+    # (higher similarity = higher chance of being sampled)
+    # top_half = top_half / top_half.sum()
+    item_weights = top_half_similarities / top_half_similarities.sum()
+    return np.random.choice(top_half_indices, size=k, p=item_weights)
 
     # def recommend_k_movies(self, userId, k):
     #     return self.user_ratings.loc[userId].sort_values(ascending=False)[:k]
 
     # def recommend_k_new_movies(self, userId, k):
-    #     return (self.user_ratings.loc[userId] * self.cats_seen.loc[userId]).sort_values(
+    #     return (self.user_ratings.loc[userId] * self.cats_seen.loc[userId])
+    #   .sort_values(
     #         ascending=False
     #     )[:k]
 

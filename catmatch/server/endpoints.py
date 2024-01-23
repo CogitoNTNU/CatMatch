@@ -1,11 +1,10 @@
 import logging
 import random
-from turtle import end_fill
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from catmatch.recsys.content_based import ContentBasedRecommender
+from catmatch.recsys.content_based import read_h5py_file, recommend_k_new_items
 from catmatch.server.utils import (
     BUCKET_BASE_URL,
     IMAGE_PATHS,
@@ -15,6 +14,9 @@ from catmatch.server.utils import (
 
 recsys_router = APIRouter()
 
+similarity_matrix = read_h5py_file("./similarity_matrix.hdf5")
+logger = logging.getLogger(__name__)
+
 
 class RecommendationsBody(BaseModel):
     ratings: dict[str, bool | None]
@@ -23,10 +25,6 @@ class RecommendationsBody(BaseModel):
 
 class RecommendationsResponse(BaseModel):
     recommendations: list[str]
-
-
-recommender = ContentBasedRecommender(similarity_matrix_path="./similarity_matrix.hdf5")
-logger = logging.getLogger(__name__)
 
 
 @recsys_router.post("/recommendations")
@@ -45,9 +43,8 @@ async def recommendations(body: RecommendationsBody):
     if ratings_array is None:
         raise HTTPException(status_code=400, detail="Invalid image URL")
     # return random recommendations
-    logger.info("Calculating recommendations...")
-    recommendations = recommender.recommend_k_new_items(
-        ratings_array, body.number_of_recommendations
+    recommendations = recommend_k_new_items(
+        ratings_array, similarity_matrix, body.number_of_recommendations
     )
     recommendation_urls = [get_image_url_from_index(index) for index in recommendations]
     return RecommendationsResponse(recommendations=recommendation_urls)
