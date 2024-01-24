@@ -28,7 +28,6 @@ def recommend_k_new_items(
     # 2. Take the cosine similarity vector for each cat the user has rated,
     #    then take the average of these vectors. Then choose the items
     #    with the k highest values in this vector.
-    # TODO: Ensure the user does not get cats they have already seen
     indices_of_seen_items = np.where(~np.isnan(user_ratings))[0]
     indices_of_liked_items = np.where(user_ratings == 1)[0]
     # Get the average similarity vector for the items the user has liked, a 1 * n array
