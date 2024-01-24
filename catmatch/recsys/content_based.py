@@ -39,13 +39,14 @@ def recommend_k_new_items(
     average_similarity_vector[indices_of_seen_items] = -np.inf
     # Take the top half of the array with the highest values
     # Get half of the array with the highest values
-    top_half_indices = np.nonzero(
-        average_similarity_vector >= np.median(average_similarity_vector)
-    )[0]
+    half = len(average_similarity_vector) // 2
+    top_half_indices = np.argpartition(average_similarity_vector, -half)[-half:]
     top_half_similarities = average_similarity_vector[top_half_indices]
+    # Convert the values to probabilities
+    # This represents how likely the user is to like each item
     top_half_items_weights = top_half_similarities / top_half_similarities.sum()
-    # Get a random sample of the top half weighted by their similarity
-    # (higher similarity = higher chance of being sampled)
+    # Get a random sample of the top half of the items weighted by
+    # how likely the user is to like the item
     return np.random.choice(top_half_indices, size=k, p=top_half_items_weights)
 
     # def recommend_k_movies(self, userId, k):
