@@ -23,9 +23,11 @@ def recommend_k_new_items(
     Returns:
         np.ndarray: The indices of items in from the similarity matrix
             of the k best items to recommend.
+            These are a set of random items from the top half of the items
+            the user are most likely to like.
     """
     # Find the K most similar cats to the user's cats
-    # 2. Take the cosine similarity vector for each cat the user has rated,
+    # 1. Take the cosine similarity vector for each cat the user has rated,
     #    then take the average of these vectors. Then choose the items
     #    with the k highest values in this vector.
     indices_of_seen_items = np.where(~np.isnan(user_ratings))[0]
@@ -36,14 +38,15 @@ def recommend_k_new_items(
     # Don't recommend the items the user has already seen
     average_similarity_vector[indices_of_seen_items] = -np.inf
     # Take the top half of the array with the highest values
-    half = len(average_similarity_vector) // 2
     # Get half of the array with the highest values
-    top_half_indices = np.argpartition(average_similarity_vector, -half)[-half:]
+    top_half_indices = np.nonzero(
+        average_similarity_vector >= np.median(average_similarity_vector)
+    )[0]
     top_half_similarities = average_similarity_vector[top_half_indices]
+    top_half_items_weights = top_half_similarities / top_half_similarities.sum()
     # Get a random sample of the top half weighted by their similarity
     # (higher similarity = higher chance of being sampled)
-    item_weights = top_half_similarities / top_half_similarities.sum()
-    return np.random.choice(top_half_indices, size=k, p=item_weights)
+    return np.random.choice(top_half_indices, size=k, p=top_half_items_weights)
 
     # def recommend_k_movies(self, userId, k):
     #     return self.user_ratings.loc[userId].sort_values(ascending=False)[:k]
