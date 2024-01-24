@@ -15,8 +15,9 @@ def recommend_k_new_items(
 
     Args:
         user_ratings (np.ndarray): The array of ratings the user has given.
-            Is NaN for unrated items.
-        similarity_matrix (np.ndarray): The similarity matrix between all items.
+            Is NaN for unrated items, 1 for liked, and 0 for disliked items.
+        similarity_matrix (np.ndarray): The similarity matrix between all items,
+            is a matrix of size n x n.
         k (int, optional): The number of recommendations for the. Defaults to 20.
 
     Returns:
@@ -28,20 +29,20 @@ def recommend_k_new_items(
     #    then take the average of these vectors. Then choose the items
     #    with the k highest values in this vector.
     # TODO: Ensure the user does not get cats they have already seen
-    indices_of_rated_items = np.where(~np.isnan(user_ratings))[0]
-    # similarity_vectors = self.similarity_matrix[indices]
-    average_similarity_vectors = similarity_matrix[indices_of_rated_items].mean(axis=0)
-    # Remove duplicates
-    average_similarity_vectors[indices_of_rated_items] = -np.inf
-    # return np.argsort(average_similarity_vectors)[::-1][:k]
+    indices_of_seen_items = np.where(~np.isnan(user_ratings))[0]
+    indices_of_liked_items = np.where(user_ratings == 1)[0]
+    # Get the average similarity vector for the items the user has liked, a 1 * n array
+    # where n is the number of items.
+    average_similarity_vector = similarity_matrix[indices_of_liked_items].mean(axis=0)
+    # Don't recommend the items the user has already seen
+    average_similarity_vector[indices_of_seen_items] = -np.inf
     # Take the top half of the array with the highest values
-    half = len(average_similarity_vectors) // 2
+    half = len(average_similarity_vector) // 2
     # Get half of the array with the highest values
-    top_half_indices = np.argpartition(average_similarity_vectors, -half)[-half:]
-    top_half_similarities = average_similarity_vectors[top_half_indices]
+    top_half_indices = np.argpartition(average_similarity_vector, -half)[-half:]
+    top_half_similarities = average_similarity_vector[top_half_indices]
     # Get a random sample of the top half weighted by their similarity
     # (higher similarity = higher chance of being sampled)
-    # top_half = top_half / top_half.sum()
     item_weights = top_half_similarities / top_half_similarities.sum()
     return np.random.choice(top_half_indices, size=k, p=item_weights)
 
