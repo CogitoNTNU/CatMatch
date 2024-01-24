@@ -87,6 +87,7 @@ def get_most_and_least_liked_items(
     # where n is the number of items.
     # Get the indices of the most and least liked items
     sorted_similarities = np.argsort(average_similarity_vector)
-    most_liked_indices = sorted_similarities[-number_of_liked_items:]
+    # Need to reverse for the most liked to come first
+    most_liked_indices = sorted_similarities[-number_of_liked_items:][::-1]
     least_liked_indices = sorted_similarities[:number_of_disliked_items]
     return MostAndLeastLiked(most_liked_indices, least_liked_indices)

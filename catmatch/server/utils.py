@@ -32,5 +32,5 @@ def convert_ratings_dict_to_array(
         index = get_index_from_image_url(key)
         if index is None:
             return None
-        ratings_array[index] = 0 if value else 1
+        ratings_array[index] = 1 if value else 0
     return ratings_array
