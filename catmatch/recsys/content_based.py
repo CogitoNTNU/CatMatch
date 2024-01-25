@@ -1,3 +1,4 @@
+import math
 from typing import NamedTuple
 
 import h5py
@@ -7,6 +8,22 @@ import numpy as np
 def read_h5py_file(path: str) -> np.ndarray:
     f = h5py.File(path, "r")
     return f["data"][()]  # type: ignore
+
+
+def _get_likeness_scores(
+    user_ratings: np.ndarray, similarity_matrix: np.ndarray
+) -> np.ndarray:
+    indices_of_liked_items = np.where(user_ratings == 1)[0]
+    indices_of_disliked_items = np.where(user_ratings == 0)[0]
+    # Get the average similarity vector for the items the user has liked, a 1 * n array
+    # where n is the number of items.
+    similarity_matrix_f64 = similarity_matrix.astype(np.float64)
+    liked_similarities_sum = similarity_matrix_f64[indices_of_liked_items].sum(axis=0)
+    disliked_similarities_sum = similarity_matrix_f64[indices_of_disliked_items].sum(
+        axis=0
+    )
+    likeness_scores = liked_similarities_sum - disliked_similarities_sum
+    return likeness_scores
 
 
 def recommend_k_new_items(
@@ -33,23 +50,24 @@ def recommend_k_new_items(
     #    then take the average of these vectors. Then choose randomly among the items
     #    with the highest values in this vecto.
     indices_of_seen_items = np.where(~np.isnan(user_ratings))[0]
-    indices_of_liked_items = np.where(user_ratings == 1)[0]
-    # Get the average similarity vector for the items the user has liked, a 1 * n array
-    # where n is the number of items.
-    average_similarity_vector = similarity_matrix[indices_of_liked_items].mean(axis=0)
-    # Don't recommend the items the user has already seen
-    average_similarity_vector[indices_of_seen_items] = -np.inf
-    # Take the top half of the array with the highest values
-    # Get half of the array with the highest values
-    half = len(average_similarity_vector) // 2
-    top_half_indices = np.argpartition(average_similarity_vector, -half)[-half:]
-    top_half_similarities = average_similarity_vector[top_half_indices]
+    likeness_scores = _get_likeness_scores(user_ratings, similarity_matrix)
+    # average_similarity_vector = similarity_matrix[indices_of_liked_items].mean(axis=0)
+    # Disregard items the user has already seen
+    likeness_scores[indices_of_seen_items] = -np.inf
+    # Take the items the user has not seen
+    # Get the top 80% of the items array with the highest values
+    # Subtract the items the user has seen
+    # half = len(likeness_scores) // 2
+    cutoff_size = int(len(likeness_scores) * 0.2)
+    cutoff_index = len(likeness_scores) - len(indices_of_seen_items) - cutoff_size
+    top_indices = np.argpartition(likeness_scores, -cutoff_index)[-cutoff_index:]
+    top_scores = likeness_scores[top_indices]
     # Convert the values to probabilities
     # This represents how likely the user is to like each item
-    top_half_items_weights = top_half_similarities / top_half_similarities.sum()
+    top_item_weights = top_scores / top_scores.sum()
     # Get a random sample of the top half of the items weighted by
     # how likely the user is to like the item
-    return np.random.choice(top_half_indices, size=k, p=top_half_items_weights)
+    return np.random.choice(top_indices, size=k, p=top_item_weights)
 
 
 class MostAndLeastLiked(NamedTuple):
@@ -78,16 +96,14 @@ def get_most_and_least_liked_items(
             for the user.
     """
     # Get the indices of the items the user has liked and disliked
-    indices_of_liked_items = np.where(user_ratings == 1)[0]
-    # Get the average similarity vector for the items the user has liked, a 1 * n array
-    # where n is the number of items.
-    average_similarity_vector = similarity_matrix[indices_of_liked_items].mean(axis=0)
+    likness_scores = _get_likeness_scores(user_ratings, similarity_matrix)
     # Get the average similarity vector for the items the user has disliked, a 1 * n
-    # array
-    # where n is the number of items.
+    # array, where n is the number of items.
     # Get the indices of the most and least liked items
-    sorted_similarities = np.argsort(average_similarity_vector)
+    sorted_similarities = np.argsort(likness_scores)
     # Need to reverse for the most liked to come first
     most_liked_indices = sorted_similarities[-number_of_liked_items:][::-1]
     least_liked_indices = sorted_similarities[:number_of_disliked_items]
+    print("least_liked_indices", least_liked_indices)
+    print("least_liked_scores", likness_scores[least_liked_indices])
     return MostAndLeastLiked(most_liked_indices, least_liked_indices)
