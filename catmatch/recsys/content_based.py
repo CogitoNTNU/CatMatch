@@ -1,3 +1,4 @@
+import dis
 import math
 from typing import NamedTuple
 
@@ -22,7 +23,16 @@ def _get_likeness_scores(
     disliked_similarities_sum = similarity_matrix_f64[indices_of_disliked_items].sum(
         axis=0
     )
-    likeness_scores = liked_similarities_sum - disliked_similarities_sum
+    # Subtract the disliked items similarity score from the liked items similarity score
+    # Thus we have a vector that represents the how much the user likes each item
+    # Add the maximum value of the disliked_similarities to the array
+    # to avoid negative values
+    likeness_scores = (
+        liked_similarities_sum
+        - disliked_similarities_sum
+        + np.max(disliked_similarities_sum)
+    )
+
     return likeness_scores
 
 
