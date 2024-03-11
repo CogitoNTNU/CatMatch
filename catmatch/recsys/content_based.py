@@ -16,6 +16,9 @@ def _get_likeness_scores(
 ) -> np.ndarray:
     indices_of_liked_items = np.where(user_ratings == 1)[0]
     indices_of_disliked_items = np.where(user_ratings == 0)[0]
+    number_of_liked_items = len(indices_of_liked_items)
+    number_of_disliked_items = len(indices_of_disliked_items)
+    total_number = number_of_liked_items + number_of_disliked_items
     # Get the average similarity vector for the items the user has liked, a 1 * n array
     # where n is the number of items.
     similarity_matrix_f64 = similarity_matrix.astype(np.float64)
@@ -27,10 +30,12 @@ def _get_likeness_scores(
     # Thus we have a vector that represents the how much the user likes each item
     # Add the maximum value of the disliked_similarities to the array
     # to avoid negative values
+    weighted_like_score = liked_similarities_sum * number_of_liked_items / total_number
+    weighted_dislike_score = (
+        disliked_similarities_sum * number_of_disliked_items / total_number
+    )
     likeness_scores = (
-        liked_similarities_sum
-        - disliked_similarities_sum
-        + np.max(disliked_similarities_sum)
+        weighted_like_score - weighted_dislike_score + np.max(weighted_dislike_score)
     )
 
     return likeness_scores
