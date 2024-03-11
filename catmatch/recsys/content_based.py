@@ -114,6 +114,8 @@ def get_most_and_least_liked_items(
     # Need to reverse for the most liked to come first
     most_liked_indices = sorted_similarities[-number_of_liked_items:][::-1]
     least_liked_indices = sorted_similarities[:number_of_disliked_items]
-    print("least_liked_indices", least_liked_indices)
-    print("least_liked_scores", likness_scores[least_liked_indices])
+    # print("most_liked_indices", most_liked_indices)
+    # print("most_liked_scores", likness_scores[most_liked_indices])
+    # print("least_liked_indices", least_liked_indices)
+    # print("least_liked_scores", likness_scores[least_liked_indices])
     return MostAndLeastLiked(most_liked_indices, least_liked_indices)
