@@ -6,8 +6,12 @@ import numpy as np
 import torch
 import tqdm
 from PIL import Image
+from rembg import remove
+from rembg.session_factory import new_session
 from sklearn.metrics.pairwise import cosine_similarity
 from torchvision import models, transforms
+
+from catmatch.server.utils import load_image_paths
 
 # Load the trained model (make sure to provide the path to your model's weights)
 embedding_model = models.efficientnet_b1(pretrained=False)
@@ -60,8 +64,12 @@ def get_image_embeddings(image_folder, batch_size=128):
     model = prepare_model()
     model.to(device)
 
-    image_folder = Path(image_folder)
-    files = list(image_folder.rglob("**/*.*"))  # Get all files recursively, no folders
+    image_paths = load_image_paths()
+    files = [
+        Path(image_path.replace(".data/", image_folder)) for image_path in image_paths
+    ]
+
+    session = new_session("u2net")
 
     n_batches = math.ceil(len(files) / batch_size)
     embeddings = []
@@ -74,6 +82,7 @@ def get_image_embeddings(image_folder, batch_size=128):
             for path in batch_paths:
                 try:
                     image = Image.open(path).convert("RGB")
+                    image = remove(image, session=session).convert("RGB")
                     batch.append(preprocess(image))
                 except Exception:
                     print(f"error in reading file {path.as_posix()}")
@@ -93,7 +102,7 @@ def calculate_similarity_matrix(embeddings: np.ndarray):
 
 
 def save_similarity_matrix(
-    similarity_matrix: np.ndarray, filename="similarity_matrix.hdf5"
+    similarity_matrix: np.ndarray, filename="similarity_matrix_effnet.hdf5"
 ):
     f = h5py.File(filename, "w")
 
@@ -101,7 +110,7 @@ def save_similarity_matrix(
 
 
 def main():
-    embeddings = get_image_embeddings("./.data")
+    embeddings = get_image_embeddings("/home/ulrikro/datasets/CatBreeds/")
     similiarity_matrix = calculate_similarity_matrix(embeddings)
     similiarity_matrix = similiarity_matrix.astype(
         np.float16
