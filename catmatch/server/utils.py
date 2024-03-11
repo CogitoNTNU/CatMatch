@@ -13,6 +13,24 @@ def load_image_paths() -> list[str]:
 IMAGE_PATHS = load_image_paths()
 
 
+def get_random_cat_from_breed(breed: str) -> str:
+    breed_images = [
+        BUCKET_BASE_URL + image_url
+        for image_url in IMAGE_PATHS
+        if breed.title() in image_url
+    ]
+    return np.random.choice(breed_images)
+
+
+def get_all_cat_breeds() -> list[str]:
+    breeds = []
+    for image_url in IMAGE_PATHS:
+        breed = image_url.split("/")[1]
+        if breed not in breeds:
+            breeds.append(breed)
+    return breeds
+
+
 def get_image_url_from_index(index: int):
     return BUCKET_BASE_URL + IMAGE_PATHS[index]
 
