@@ -1,7 +1,9 @@
 import logging
 
+import numpy as np
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from sympy import O
 
 from catmatch.recsys.content_based import (
     get_most_and_least_liked_items,
@@ -19,8 +21,22 @@ recsys_router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
+
+def normalize_similarity_matrix(similarity_matrix: np.ndarray) -> np.ndarray:
+    """Normalize the similarity matrix to be between 0 and 1"""
+    arr_mean = similarity_matrix.mean()
+    arr_std = similarity_matrix.std()
+
+    normalized = (similarity_matrix - arr_mean) / arr_std
+    nonzero_matrix = normalized + normalized.max()
+    print("nonzero_matrix", nonzero_matrix)
+    return nonzero_matrix
+
+
 ALL_CAT_BREEDS = get_all_cat_breeds()
-SIMILARITY_MATRIX = read_h5py_file("./similarity_matrix.hdf5")
+SIMILARITY_MATRIX = normalize_similarity_matrix(
+    read_h5py_file("./similarity_matrix.hdf5")
+)
 
 
 def get_initial_recommendations():

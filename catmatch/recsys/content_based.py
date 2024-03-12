@@ -8,7 +8,8 @@ import numpy as np
 
 def read_h5py_file(path: str) -> np.ndarray:
     f = h5py.File(path, "r")
-    return f["data"][()]  # type: ignore
+    matrix: np.ndarray = f["data"][()]  # type: ignore
+    return matrix.astype(np.float64)
 
 
 def _get_likeness_scores(
@@ -41,7 +42,8 @@ def _get_likeness_scores(
     return likeness_scores
 
 
-def get_outliers(similarity_matrix: np.ndarray, threshold=0.7):
+def get_outliers(similarity_matrix: np.ndarray, threshold: float | None = None):
+    threshold = threshold or (similarity_matrix.mean() - similarity_matrix.std())
     average_scores = similarity_matrix.mean(axis=0)
     outliers = np.where(average_scores < threshold)[0]
     return outliers
@@ -84,14 +86,29 @@ def recommend_k_new_items(
     # Subtract the items the user has seen
     # half = len(likeness_scores) // 2
     cutoff_size = int(len(likeness_scores) * 0.2)
-    cutoff_index = len(likeness_scores) - len(indices_of_seen_items) - cutoff_size
+    cutoff_index = (
+        len(likeness_scores)
+        - len(indices_of_seen_items)
+        - cutoff_size
+        - len(outliers_indices)
+    )
+    print("sim_matrx_avg", likeness_scores.mean(), similarity_matrix.mean())
+    print("cutoff_index", cutoff_index)
     top_indices = np.argpartition(likeness_scores, -cutoff_index)[-cutoff_index:]
-    top_scores = likeness_scores[top_indices]
+    # Non-nan value indices
+    non_nan_top_indices = np.where(
+        ~np.isnan(likeness_scores[top_indices])
+        & ~np.isinf(likeness_scores[top_indices])
+    )[0]
+    top_scores = likeness_scores[top_indices][non_nan_top_indices]
+    print("top_scores", top_scores)
+    print("isinf", any(np.isinf(top_scores)))
     # Convert the values to probabilities
     # This represents how likely the user is to like each item
     top_item_weights = top_scores / top_scores.sum()
     # Get a random sample of the top half of the items weighted by
     # how likely the user is to like the item
+    print("top_scores", top_scores.sum())
     return np.random.choice(top_indices, size=k, p=top_item_weights)
 
 
