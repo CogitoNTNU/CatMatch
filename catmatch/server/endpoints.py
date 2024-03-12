@@ -112,6 +112,8 @@ class MostLeastLikedResponse(BaseModel):
 
 @recsys_router.post("/most-least-liked")
 async def most_and_least_liked(body: MostLeastLikedBody):
+    if len(body.ratings) == 0:
+        return MostLeastLikedResponse(most_liked=[], least_liked=[])
     ratings_array = convert_ratings_dict_to_array(body.ratings)
     if ratings_array is None:
         raise HTTPException(status_code=400, detail="Invalid image URL")
