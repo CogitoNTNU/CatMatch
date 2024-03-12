@@ -30,15 +30,29 @@ def _get_likeness_scores(
     # Thus we have a vector that represents the how much the user likes each item
     # Add the maximum value of the disliked_similarities to the array
     # to avoid negative values
-    weighted_like_score = liked_similarities_sum * number_of_liked_items / total_number
-    weighted_dislike_score = (
+    weighted_like_scores = liked_similarities_sum * number_of_liked_items / total_number
+    weighted_dislike_scores = (
         disliked_similarities_sum * number_of_disliked_items / total_number
     )
     likeness_scores = (
-        weighted_like_score - weighted_dislike_score + np.max(weighted_dislike_score)
+        weighted_like_scores - weighted_dislike_scores + np.max(weighted_dislike_scores)
     )
 
     return likeness_scores
+
+
+def get_outliers(similarity_matrix: np.ndarray, threshold=0.7):
+    average_scores = similarity_matrix.mean(axis=0)
+    outliers = np.where(average_scores < threshold)[0]
+    print(outliers)
+    print(outliers.shape)
+    return outliers
+
+
+def remove_outliers(
+    indices_array: np.ndarray, similarity_matrix: np.ndarray, threshold=0.7
+):
+    outliers = get_outliers(similarity_matrix, threshold)
 
 
 def recommend_k_new_items(
@@ -66,9 +80,13 @@ def recommend_k_new_items(
     #    with the highest values in this vecto.
     indices_of_seen_items = np.where(~np.isnan(user_ratings))[0]
     likeness_scores = _get_likeness_scores(user_ratings, similarity_matrix)
+    outliers_indices = get_outliers(similarity_matrix)
+
     # average_similarity_vector = similarity_matrix[indices_of_liked_items].mean(axis=0)
     # Disregard items the user has already seen
     likeness_scores[indices_of_seen_items] = -np.inf
+    # Disregard outliers
+    likeness_scores[outliers_indices] = -np.inf
     # Take the items the user has not seen
     # Get the top 80% of the items array with the highest values
     # Subtract the items the user has seen
@@ -116,11 +134,22 @@ def get_most_and_least_liked_items(
     # array, where n is the number of items.
     # Get the indices of the most and least liked items
     sorted_similarities = np.argsort(likness_scores)
+    outliers = get_outliers(similarity_matrix)
     # Need to reverse for the most liked to come first
-    most_liked_indices = sorted_similarities[-number_of_liked_items:][::-1]
-    least_liked_indices = sorted_similarities[:number_of_disliked_items]
-    # print("most_liked_indices", most_liked_indices)
-    # print("most_liked_scores", likness_scores[most_liked_indices])
+    most_liked_indices = sorted_similarities[::-1]
+    least_liked_indices = sorted_similarities
+    most_liked_indices = most_liked_indices[
+        np.isin(most_liked_indices, outliers, invert=True)
+    ]
+    least_liked_indices = least_liked_indices[
+        np.isin(least_liked_indices, outliers, invert=True)
+    ]
+    top_liked = most_liked_indices[:number_of_liked_items]
+    top_disliked = least_liked_indices[:number_of_disliked_items]
+
+    # Filter out outliers
+    # print("most_liked_indices", top_liked)
+    # print("most_liked_scores", likness_scores[top_liked])
     # print("least_liked_indices", least_liked_indices)
-    # print("least_liked_scores", likness_scores[least_liked_indices])
-    return MostAndLeastLiked(most_liked_indices, least_liked_indices)
+    # print("least_liked_scores", likness_scores[top_disliked])
+    return MostAndLeastLiked(top_liked, top_disliked)
