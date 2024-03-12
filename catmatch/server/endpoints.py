@@ -7,6 +7,7 @@ from sympy import O
 
 from catmatch.recsys.content_based import (
     get_most_and_least_liked_items,
+    get_outliers,
     read_h5py_file,
     recommend_k_new_items,
 )
@@ -29,7 +30,6 @@ def normalize_similarity_matrix(similarity_matrix: np.ndarray) -> np.ndarray:
 
     normalized = (similarity_matrix - arr_mean) / arr_std
     nonzero_matrix = normalized + normalized.max()
-    print("nonzero_matrix", nonzero_matrix)
     return nonzero_matrix
 
 
@@ -37,6 +37,7 @@ ALL_CAT_BREEDS = get_all_cat_breeds()
 SIMILARITY_MATRIX = normalize_similarity_matrix(
     read_h5py_file("./similarity_matrix.hdf5")
 )
+OUTLIERS_INDICES = get_outliers(SIMILARITY_MATRIX)
 
 
 def get_initial_recommendations():
@@ -76,7 +77,7 @@ async def recommendations(body: RecommendationsBody):
         if ratings_array is None:
             raise HTTPException(status_code=400, detail="Invalid image URL")
         addon_recoms = recommend_k_new_items(
-            ratings_array, SIMILARITY_MATRIX, missing_recommendations
+            ratings_array, SIMILARITY_MATRIX, OUTLIERS_INDICES, missing_recommendations
         )
         total_recoms_indices = initial + list(addon_recoms)
         total_recom_urls = [
@@ -89,7 +90,10 @@ async def recommendations(body: RecommendationsBody):
     if ratings_array is None:
         raise HTTPException(status_code=400, detail="Invalid image URL")
     addon_recoms = recommend_k_new_items(
-        ratings_array, SIMILARITY_MATRIX, body.number_of_recommendations
+        ratings_array,
+        SIMILARITY_MATRIX,
+        OUTLIERS_INDICES,
+        body.number_of_recommendations,
     )
     recommendation_urls = [get_image_url_from_index(index) for index in addon_recoms]
     return RecommendationsResponse(recommendations=recommendation_urls)
@@ -115,6 +119,7 @@ async def most_and_least_liked(body: MostLeastLikedBody):
     most_liked_items, least_liked_items = get_most_and_least_liked_items(
         ratings_array,
         SIMILARITY_MATRIX,
+        OUTLIERS_INDICES,
         body.number_of_liked_items,
         body.number_of_disliked_items,
     )
