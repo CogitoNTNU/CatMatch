@@ -44,15 +44,7 @@ def _get_likeness_scores(
 def get_outliers(similarity_matrix: np.ndarray, threshold=0.7):
     average_scores = similarity_matrix.mean(axis=0)
     outliers = np.where(average_scores < threshold)[0]
-    print(outliers)
-    print(outliers.shape)
     return outliers
-
-
-def remove_outliers(
-    indices_array: np.ndarray, similarity_matrix: np.ndarray, threshold=0.7
-):
-    outliers = get_outliers(similarity_matrix, threshold)
 
 
 def recommend_k_new_items(
